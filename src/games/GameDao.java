@@ -12,18 +12,23 @@ public class GameDao {
 
     private Connection con = null;
 
-    public static void main(String[] args) {
-    	GameDao dao = new GameDao();
-//        System.out.println(dao.getNextAccountNumber("123456"));
-    }
-
-    
-
-    public GameDao() {
+     public GameDao() {
         try {
-            System.out.println("Loading db driver...");
-            Connection conn = DriverManager.getConnection("jdbc:hsqldb:hsql://localhost/oneDB", "SA", "Passw0rd");
-    		Statement stmt = conn.createStatement();
+        	System.out.println("Loading db driver...");
+			try {
+				Class.forName("org.hsqldb.jdbc.JDBCDriver").newInstance();
+			} catch (InstantiationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			con = DriverManager.getConnection("jdbc:hsqldb:hsql://localhost/oneDB", "SA", "Passw0rd");
+    		Statement stmt = con.createStatement();
     		
     		stmt.executeUpdate("CREATE TABLE IF NOT EXISTS GAMES(id INTEGER, title VARCHAR(32) NOT NULL, platform VARCHAR(32) NOT NULL, year VARCHAR(32), price VARCHAR(32))");
 
@@ -33,12 +38,12 @@ public class GameDao {
             ex.printStackTrace();
         }
     }
-    public int getNextGameID(int game_id) {
+    public int getNextGameID(int id) {
         int newGameID = -1;
 
         try {
             PreparedStatement pstmt = con.prepareStatement(
-                    "SELECT max(id) as MAX_GAME_ID FROM GAMES");
+                    "SELECT max(id) as MAX_GAME_ID FROM Games");
             ResultSet rs = pstmt.executeQuery();
             if (!rs.next()) {
                 return -1;
@@ -56,13 +61,13 @@ public class GameDao {
     }
 
     public Game getGame(int id) {
-        Game ba = null;
+        Game ga = null;
         try {
 
             PreparedStatement ps
                     = con.prepareStatement(
-                            "SELECT * FROM GAMES WHERE "
-                            + "ID=?");
+                            "SELECT * FROM Games WHERE "
+                            + "id=?");
             ps.setInt(1, id);
 
             ResultSet rs = ps.executeQuery();
@@ -73,14 +78,14 @@ public class GameDao {
             }
 
             // ok here, have at least one record
-            ba = new Game();
+            ga = new Game(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5));
 
         } catch (SQLException ex) {
 //            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
-        return ba;
+        return ga;
     }
 
     public ArrayList<Game> getAllGames() {
@@ -91,11 +96,11 @@ public class GameDao {
 
             PreparedStatement ps
                     = con.prepareStatement(
-                            "SELECT * FROM GAME");
+                            "SELECT * FROM Games");
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                Game ba = new Game();
-                games.add(ba);
+                Game ga = new Game(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5));
+                games.add(ga);
             }
 
         } catch (SQLException ex) {
@@ -107,17 +112,11 @@ public class GameDao {
         return games;
     }
 
-    public int addGame(Game game) {
+    public void addGame(Game game) {
         try {
-            // make sure that the account is NOT already in the db
-            if (getGame(game.getId()) != null) {
-                // account is ALREADY in the db
-                return -1;
-            } else {
-                // add
                 PreparedStatement ps
                         = con.prepareStatement(
-                                "INSERT INTO GAME "
+                                "INSERT INTO Games "
                                 + "(ID , TITLE, PLATFORM, YEAR, PRICE)"
                                 + "VALUES (?,?,?,?,?)");
                 ps.setInt(1, game.getId());
@@ -128,51 +127,46 @@ public class GameDao {
 
 
                 ps.executeUpdate();
-            }
+         //   }
 
         } catch (SQLException ex) {
 //            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
-        return 1; //ok
+        //return 1; //ok
     }
 
-    public int updateGame(Game game) {
+    public void updateGame(Game game) {
         try {
-            // make sure that the account exists
-            if (getGame(game.getId()) == null) {
-                // account is NOT in the db
-                return -1;
-            } else {
-                // update
                 PreparedStatement ps
                         = con.prepareStatement(
-                                "UPDATE GAME "
-                                + "SET ID=?, TITLE=?, PLATFORM=? YEAR=?, PRICE=?,"
+                                "UPDATE Games "
+                                + "SET TITLE=?, PLATFORM=? YEAR=?, PRICE=?,"
                                 + "WHERE (ID=?)");
-                ps.setInt(1, game.getId());
-                ps.setString(2, game.getTitle());
-                ps.setString(3, game.getPlatform());
-                ps.setString(4, game.getYear());
-                ps.setString(5, game.getPrice());
-
+               
+                ps.setString(1, game.getTitle());
+                ps.setString(2, game.getPlatform());
+                ps.setString(3, game.getYear());
+                ps.setString(4, game.getPrice());
+                ps.setInt(5, game.getId());
+                
                 ps.executeUpdate();
 
-            }
+           // }
         } catch (SQLException ex) {
 //            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
-        return 1; //ok
+       // return 1; //ok
     }
 
     public void deleteGame(String id){
         try {
             PreparedStatement ps
                     = con.prepareStatement(
-                            "DELETE FROM GAME "
+                            "DELETE FROM GAMES "
                             + "WHERE (ID=?)");
             ps.setInt(1, Integer.parseInt(id));
 
@@ -189,7 +183,7 @@ public class GameDao {
         try {
             PreparedStatement ps
                     = con.prepareStatement(
-                            "DELETE * FROM GAME");
+                            "DELETE * FROM GAMES");
 
             ps.execute();
 

@@ -8,6 +8,18 @@ import javax.xml.bind.annotation.XmlType;
 public class Game {
 	int id;
 	String title, platform, year, price;
+	
+	public Game() {
+		
+	}
+	public Game(int id, String title, String platform, String year, String price) {
+		super();
+		this.id = id;
+		this.title = title;
+		this.platform = platform;
+		this.year = year;
+		this.price = price;
+	}
 
 	public int getId() {
 		return id;

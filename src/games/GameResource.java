@@ -1,17 +1,26 @@
 package games;
 
-import java.io.IOException;
 import java.util.List;
-
-import javax.ws.rs.*;
+import java.util.Set;
+import java.util.TreeSet;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import javax.servlet.ServletContext;
-import javax.servlet.http.*;
 
 @Path("/games")
 public class GameResource {
+	@Context
 	private UriInfo context;
 	
 	private GameDao dao = new GameDao();
@@ -19,14 +28,14 @@ public class GameResource {
 	public GameResource() {
 		
 	}
-	@POST
-	@Produces({ MediaType.TEXT_HTML })
-	@Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
-	public void addGame(@FormParam("id") String id,
+	@POST // add
+	@Produces({ MediaType.APPLICATION_XML }) // Accept header
+	@Consumes({ MediaType.APPLICATION_XML }) // Content-type header
+	public void addGame(
 			@FormParam("title") String title,
 			@FormParam("platform") String platform,
 			@FormParam("year") String year,
-			@FormParam("price") String price) throws IOException {
+			@FormParam("price") String price) {
 		
 		Game game = new Game();
 		game.setTitle(title);
@@ -34,50 +43,48 @@ public class GameResource {
 		game.setYear(year);
 		game.setPrice(price);
 		
-		int nextGame = dao.getNextGameID(game.getId());
-		game.setId(nextGame);
+//		int nextGame = dao.getNextGameID(game.getId());
+//		game.setId(nextGame);
 		dao.addGame(game);
 	}
 	
 	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	public List<Game>getAllGames(){
+	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+	public List<Game> getAllGames(){
 		return dao.getAllGames();
 	}
-	
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-	@Path("{id}")
-	public Game getGame(@PathParam("id") String id){
-		return dao.getGame(Integer.parseInt(id));
-	}
-	
 	@DELETE
-	@Produces({ MediaType.TEXT_HTML })
-	@Path("{gameId}")
-	public void deleteGame(@PathParam("gameId") String id) throws IOException {
+	@Path("{id}")
+	public void deleteGame(@PathParam("id") String id) {
 		System.out.println("Delete id: " + id);
 		dao.deleteGame(id);
 	}
-	
 	@PUT
-	@Produces({ MediaType.TEXT_HTML })
-	@Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
-	@Path("{gameId}")
+	@Produces({ MediaType.APPLICATION_XML }) // Accept header
+	@Consumes({ MediaType.APPLICATION_XML }) // Content-type header
+	@Path("{id}")
 	public void updateGame(@FormParam("id") String id,
 			@FormParam("title") String title,
 			@FormParam("platform") String platform,
 			@FormParam("year") String year,
-			@FormParam("price") String price) throws IOException {
+			@FormParam("price") String price)  {
 		System.out.println("PUT id = " + id);
 		
 		Game game = new Game();
+		game.setId(Integer.parseInt(id));
 		game.setTitle(title);
 		game.setPlatform(platform);
 		game.setYear(year);
 		game.setPrice(price);
-	
-		
+			
 		dao.updateGame(game);
 	}
+	@GET
+	@Path("{id}")
+	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+	public Game getGame(@PathParam("id") String id){
+		return dao.getGame(Integer.parseInt(id));
+	}
+	
+
 }
