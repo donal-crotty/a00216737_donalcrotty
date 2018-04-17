@@ -33,7 +33,6 @@ public class GameDao {
     		stmt.executeUpdate("CREATE TABLE IF NOT EXISTS GAMES(id INTEGER, title VARCHAR(32) NOT NULL, platform VARCHAR(32) NOT NULL, year VARCHAR(32), price VARCHAR(32))");
 
         } catch (SQLException ex) {
-            //Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
@@ -52,7 +51,6 @@ public class GameDao {
             newGameID = rs.getInt("MAX_GAME_ID") + 1;
 
         } catch (SQLException ex) {
-            //Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
@@ -81,7 +79,6 @@ public class GameDao {
             ga = new Game(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5));
 
         } catch (SQLException ex) {
-//            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
@@ -104,7 +101,6 @@ public class GameDao {
             }
 
         } catch (SQLException ex) {
-//            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
@@ -127,39 +123,33 @@ public class GameDao {
 
 
                 ps.executeUpdate();
-         //   }
 
         } catch (SQLException ex) {
-//            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
-        //return 1; //ok
     }
 
     public void updateGame(Game game) {
-        try {
-                PreparedStatement ps
-                        = con.prepareStatement(
-                                "UPDATE Games "
-                                + "SET TITLE=?, PLATFORM=? YEAR=?, PRICE=?,"
-                                + "WHERE (ID=?)");
-               
-                ps.setString(1, game.getTitle());
-                ps.setString(2, game.getPlatform());
-                ps.setString(3, game.getYear());
-                ps.setString(4, game.getPrice());
-                ps.setInt(5, game.getId());
-                
-                ps.executeUpdate();
-
-           // }
-        } catch (SQLException ex) {
-//            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
-            System.err.println("SQLException");
-            ex.printStackTrace();
-        }
-       // return 1; //ok
+    	try {
+    		Statement stmt = con.createStatement();
+    		ResultSet rs = stmt.executeQuery("SELECT * FROM Games where id = "+game.getId()+"");
+    		if(rs.next()) {
+    			//It Exists update
+    			stmt.executeUpdate("UPDATE Games SET title ='"+game.getTitle()+"', platform='"
+    			+game.getPlatform()+"', year = '"+game.getYear()+"', price = '"+game.getPrice()+"' WHERE id = "+game.getId()+"");
+    			stmt.close();
+    			
+    		}else {
+    			//Create
+    			stmt.executeUpdate("INSERT INTO Games(title , platform , year, price) VALUES('"+game.getTitle()+"','"
+    			+game.getPlatform()+"','"+game.getYear()+"','"+game.getPrice()+"')");
+    			stmt.close();
+    		}
+    		stmt.close();
+    	}catch(SQLException e){
+    		e.printStackTrace();
+    	}
     }
 
     public void deleteGame(String id){
@@ -173,7 +163,6 @@ public class GameDao {
             ps.executeUpdate();
 
         } catch (SQLException ex) {
-//            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }
@@ -188,7 +177,6 @@ public class GameDao {
             ps.execute();
 
         } catch (SQLException ex) {
-//            Logger.getLogger(BankServiceDAO.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("SQLException");
             ex.printStackTrace();
         }

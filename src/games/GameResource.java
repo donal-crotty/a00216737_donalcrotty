@@ -29,15 +29,17 @@ public class GameResource {
 		
 	}
 	@POST // add
-	@Produces({ MediaType.APPLICATION_XML }) // Accept header
-	@Consumes({ MediaType.APPLICATION_XML }) // Content-type header
+	@Produces({ MediaType.TEXT_HTML }) // Accept header
+	@Consumes({MediaType.APPLICATION_FORM_URLENCODED,  MediaType.TEXT_HTML}) // Content-type header
 	public void addGame(
+			@FormParam("id") int id,
 			@FormParam("title") String title,
 			@FormParam("platform") String platform,
 			@FormParam("year") String year,
 			@FormParam("price") String price) {
 		
 		Game game = new Game();
+		game.setId(id);
 		game.setTitle(title);
 		game.setPlatform(platform);
 		game.setYear(year);
@@ -60,15 +62,16 @@ public class GameResource {
 		dao.deleteGame(id);
 	}
 	@PUT
-	@Produces({ MediaType.APPLICATION_XML }) // Accept header
-	@Consumes({ MediaType.APPLICATION_XML }) // Content-type header
+	@Produces({ MediaType.TEXT_HTML  }) 
+	@Consumes({ MediaType.APPLICATION_FORM_URLENCODED, MediaType.TEXT_HTML }) 
 	@Path("{id}")
-	public void updateGame(@FormParam("id") String id,
+	public void updateGame(@PathParam("id") String id,
 			@FormParam("title") String title,
 			@FormParam("platform") String platform,
 			@FormParam("year") String year,
 			@FormParam("price") String price)  {
-		System.out.println("PUT id = " + id);
+		
+		System.out.println("PUT title = " + title);
 		
 		Game game = new Game();
 		game.setId(Integer.parseInt(id));

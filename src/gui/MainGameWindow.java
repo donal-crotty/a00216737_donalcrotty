@@ -4,10 +4,16 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.rmi.Naming;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -17,49 +23,61 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+
 
 public class MainGameWindow extends JFrame implements ActionListener{
 	private JButton addButton = new JButton("Add");
 	private JButton readButton = new JButton("Read");
+	private JButton readAllButton = new JButton("Read All");
 	private JButton updateButton = new JButton("Update");
 	private JButton deleteButton = new JButton("Delete");
+	private JButton tablesButton = new JButton("Create Tables");
 	
 	private JButton addCancelButton = new JButton("Cancel");
 	private JButton readCancelButton = new JButton("Cancel");
 	private JButton updateCancelButton = new JButton("Cancel");
 	private JButton deleteCancelButton = new JButton("Cancel");
 	
+	private JLabel idLabel = new JLabel("Id:");
 	private JLabel titleLabel = new JLabel("Title:");
 	private JLabel platformLabel = new JLabel("Platform:");
-	private JLabel developerLabel = new JLabel("Developer:");
-	private JLabel pegiRatingLabel = new JLabel("PegiRating:");
+	private JLabel yearLabel = new JLabel("Year:");
 	private JLabel priceLabel = new JLabel("Price:");
 	
 	private JLabel updateTitleLabel = new JLabel("Title:");
 	private JLabel updatePlatformLabel = new JLabel("Platform:");
-	private JLabel updateDeveloperLabel = new JLabel("Developer:");
-	private JLabel updatePegiRatingLabel = new JLabel("PegiRating:");
+	private JLabel updateYearLabel = new JLabel("Year:");
 	private JLabel updatePriceLabel = new JLabel("Price:");
 	
-	private JLabel readTitleLabel = new JLabel("Title:");
+	private JLabel readIdLabel = new JLabel("Id:");
 	
-	private JLabel deleteTitleLabel = new JLabel("Title:");
+	private JLabel deleteIdLabel = new JLabel("Id:");
 	
+	private JTextField newIdField = new JTextField("1");
 	private JTextField newTitleField = new JTextField("BF1");
 	private JTextField newPlatformField = new JTextField("Xbox ");
-	private JTextField newDeveloperField = new JTextField("EA");
-	private JTextField newPegiRatingField = new JTextField("16");
+	private JTextField newYearField = new JTextField("16");
 	private JTextField newPriceField = new JTextField("75");
 	
+	private JTextField updateIdField = new JTextField("1");
 	private JTextField updateTitleField = new JTextField();
 	private JTextField updatePlatformField = new JTextField();
-	private JTextField updateDeveloperField = new JTextField();
-	private JTextField updatePegiRatingField = new JTextField();
+	private JTextField updateYearField = new JTextField();
 	private JTextField updatePriceField = new JTextField();
 	
-	private JTextField readTitleField = new JTextField();
+	private JTextField readIdField = new JTextField();
 	
-	private JTextField deleteTitleField = new JTextField();
+	private JTextField deleteIdField = new JTextField();
 	
 	Color myColor = Color.decode("#577099");
 	Color myColor1 = Color.decode("#7e7e7f");
@@ -94,39 +112,44 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		deleteCentre.setBackground(myColor1);
 		deleteSouth.setBackground(myColor1);
 		
+		JPanel tablesTab = new JPanel(new BorderLayout());
+		JPanel tablesCentre = new JPanel(new GridLayout(10,2));
+		JPanel tablesSouth = new JPanel();
+		tablesCentre.setBackground(myColor1);
+		tablesSouth.setBackground(myColor1);
+		
 		tabbedPane.setBackground(myColor);
 		tabbedPane.setForeground(Color.white);
 		
+		idLabel.setForeground(Color.white);
 		titleLabel.setForeground(Color.white);
 		platformLabel.setForeground(Color.white);
-		developerLabel.setForeground(Color.white);
-		pegiRatingLabel.setForeground(Color.white);
+		yearLabel.setForeground(Color.white);
 		priceLabel.setForeground(Color.white);
 		updateTitleLabel.setForeground(Color.white);
 		updatePlatformLabel.setForeground(Color.white);
-		updateDeveloperLabel.setForeground(Color.white);
-		updatePegiRatingLabel.setForeground(Color.white);
+		updateYearLabel.setForeground(Color.white);
 		updatePriceLabel.setForeground(Color.white);
-		readTitleLabel.setForeground(Color.white);
-		deleteTitleLabel.setForeground(Color.white);
+		readIdLabel.setForeground(Color.white);
+		deleteIdLabel.setForeground(Color.white);
 		
-		tabbedPane.addTab("Create Tab", createTab);
-		tabbedPane.addTab("Read Tab", readTab);
-		tabbedPane.addTab("Update Tab", updateTab);
-		tabbedPane.addTab("Delete Tab", deleteTab);
-		
+		tabbedPane.addTab("Create", createTab);
+		tabbedPane.addTab("Read", readTab);
+		tabbedPane.addTab("Update", updateTab);
+		tabbedPane.addTab("Delete", deleteTab);
+		tabbedPane.addTab("Create Tables", tablesTab);
 		frame.add(tabbedPane);
 		
 		createTab.add(createCentre, BorderLayout.CENTER);
 		createTab.add(createSouth, BorderLayout.SOUTH);
+		createCentre.add(idLabel);
+		createCentre.add(newIdField);
 		createCentre.add(titleLabel);
 		createCentre.add(newTitleField);
 		createCentre.add(platformLabel);
 		createCentre.add(newPlatformField);
-		createCentre.add(developerLabel);
-		createCentre.add(newDeveloperField);
-		createCentre.add(pegiRatingLabel);
-		createCentre.add(newPegiRatingField);
+		createCentre.add(yearLabel);
+		createCentre.add(newYearField);
 		createCentre.add(priceLabel);
 		createCentre.add(newPriceField);
 		createSouth.add(addButton);
@@ -137,19 +160,22 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		addCancelButton.setBackground(myColor);
 		addButton.setForeground(Color.white);
 		addCancelButton.setForeground(Color.white);
-	   // theFactory  = (GameFactory)Naming.lookup(theURL+"factory");
 		
 		readTab.add(readCentre,BorderLayout.CENTER);
 		readTab.add(readSouth,BorderLayout.SOUTH);
-		readCentre.add(readTitleLabel);
-		readCentre.add(readTitleField);
+		readCentre.add(readIdLabel);
+		readCentre.add(readIdField);
 		readSouth.add(readButton);
+		readSouth.add(readAllButton);
 		readButton.addActionListener(this);
+		readAllButton.addActionListener(this);
 		readSouth.add(readCancelButton);
 		readCancelButton.addActionListener(this);
 		readButton.setBackground(myColor);
+		readAllButton.setBackground(myColor);
 		readCancelButton.setBackground(myColor);
 		readButton.setForeground(Color.white);
+		readAllButton.setForeground(Color.white);
 		readCancelButton.setForeground(Color.white);
 	
 		updateTab.add(updateCentre, BorderLayout.CENTER);
@@ -158,10 +184,8 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		updateCentre.add(updateTitleField);
 		updateCentre.add(updatePlatformLabel);
 		updateCentre.add(updatePlatformField);
-		updateCentre.add(updateDeveloperLabel);
-		updateCentre.add(updateDeveloperField);
-		updateCentre.add(updatePegiRatingLabel);
-		updateCentre.add(updatePegiRatingField);
+		updateCentre.add(updateYearLabel);
+		updateCentre.add(updateYearField);
 		updateCentre.add(updatePriceLabel);
 		updateCentre.add(updatePriceField);
 		updateSouth.add(updateButton);
@@ -175,8 +199,8 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		
 		deleteTab.add(deleteCentre,BorderLayout.CENTER);
 		deleteTab.add(deleteSouth,BorderLayout.SOUTH);
-		deleteCentre.add(deleteTitleLabel);
-		deleteCentre.add(deleteTitleField);
+		deleteCentre.add(deleteIdLabel);
+		deleteCentre.add(deleteIdField);
 		deleteSouth.add(deleteButton);
 		deleteButton.addActionListener(this);
 		deleteSouth.add(deleteCancelButton);
@@ -185,7 +209,11 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		deleteCancelButton.setBackground(myColor);
 		deleteButton.setForeground(Color.white);
 		deleteCancelButton.setForeground(Color.white);
-	
+		
+		tablesTab.add(tablesCentre,BorderLayout.CENTER);
+		tablesTab.add(tablesSouth,BorderLayout.SOUTH);
+		tablesSouth.add(tablesButton);
+		tablesButton.addActionListener(this);
 		pack();
 		frame.setSize(640,480);
 		frame.setVisible(true);	
@@ -193,48 +221,113 @@ public class MainGameWindow extends JFrame implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e){
 		if(e.getSource().equals(addButton)){
-			try{
+			//POST
 				System.out.println("Add Button Works");
-				String priceString ="";
-				String pegiRatingString="";
+				int id = Integer.parseInt(newIdField.getText());
 				String title = newTitleField.getText();
 				String platform = newPlatformField.getText();
-				String developer = newDeveloperField.getText();
-				int pegiRating = Integer.parseInt(newPegiRatingField.getText());
-				pegiRatingString= Integer.toString(pegiRating);
-				int price = Integer.parseInt(newPriceField.getText());
-				priceString= Integer.toString(price);
-				JOptionPane.showMessageDialog(new JFrame(), "Game created.");
-			}catch(NumberFormatException numEx){
-				JOptionPane.showMessageDialog(new JFrame(), "Incorrect input for PegiRating/Price, try again");
-			}
-			catch(Exception ex){
-				ex.printStackTrace();
-			}
+				String year = newYearField.getText();
+				String price = newPriceField.getText();
+				
+				URI uri = null;
+				try {
+					uri = new URIBuilder()
+							.setScheme("http")
+							.setHost("localhost")
+							.setPort(8080)
+							.setPath("/A00216737_DonalCrotty/games/games").build();
+				} catch (URISyntaxException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+				System.out.println(uri.toString());
+				
+				HttpPost httpPost = new HttpPost(uri);
+				httpPost.setHeader("Accept" , "text/html");
+				CloseableHttpClient client = HttpClients.createDefault();
+				
+				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+				nameValuePairs.add(new BasicNameValuePair("id" , ""+id));
+				nameValuePairs.add(new BasicNameValuePair("title" , title));
+				nameValuePairs.add(new BasicNameValuePair("platform" , platform));
+				nameValuePairs.add(new BasicNameValuePair("year" , "" + year));
+				nameValuePairs.add(new BasicNameValuePair("price" , "" + price));
+				
+				try {
+					httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+				} catch (UnsupportedEncodingException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				System.out.println("Sending Request ...");
+				CloseableHttpResponse response;
+				try {
+					response = client.execute(httpPost);
+					System.out.println("Response " + response.toString());
+					JOptionPane.showMessageDialog(new JFrame(), "Game created.");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 		}
 		if(e.getSource().equals(readButton)){
-			try{
+			//GET ById
 				System.out.println("Read Button Works");
-				String title = readTitleField.getText();
-				//JOptionPane.showMessageDialog(new JFrame(), "Game Details:\nTitle:"+aGame.getTitle()+" \nPlatform: "+aGame.getPlatform()+" \nDeveloper: "+aGame.getDeveloper()+" \nPegiRating:"+aGame.getPegiRating()+" \nPrice: €"+aGame.getPrice());
-			}
-			catch(NullPointerException nullP){
+				int id= Integer.parseInt(readIdField.getText());
+				URI uri = null;
+				try {
+					uri = new URIBuilder()
+							.setScheme("http")
+							.setHost("localhost")
+							.setPort(8080)
+							.setPath("/A00216737_DonalCrotty/games/games/"+id).build();
+				} catch (URISyntaxException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+				System.out.println(uri.toString());
+				
+				HttpGet httpGet = new HttpGet(uri);
+				httpGet.setHeader("Accept" , "text/html");
+				CloseableHttpClient client = HttpClients.createDefault();
+			
 				JOptionPane.showMessageDialog(new JFrame(), "This product does not exist.");
-			}
-			catch(Exception ex){
-				ex.printStackTrace();
-			}
+			
+		}
+		if(e.getSource().equals(readAllButton)){
+			//GET ALL
+				System.out.println("Read All Button Works");
+				JOptionPane.showMessageDialog(new JFrame(), "ID field is not required, this will be cleared.");
+				readIdField.setText("");
+				URI uri = null;
+				try {
+					uri = new URIBuilder()
+							.setScheme("http")
+							.setHost("localhost")
+							.setPort(8080)
+							.setPath("/A00216737_DonalCrotty/games/games/").build();
+				} catch (URISyntaxException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+				System.out.println(uri.toString());
+				
+				HttpGet httpGet = new HttpGet(uri);
+				httpGet.setHeader("Accept" , "text/html");
+				CloseableHttpClient client = HttpClients.createDefault();
+			
+				//JOptionPane.showMessageDialog(new JFrame(), "This product does not exist.");
+			
 		}
 		if(e.getSource().equals(updateButton)){
 			try{
 				System.out.println("Update Button Works");
 				String title = updateTitleField.getText();
 				String priceString="";
-				String pegiRatingString="";
+				String yearString="";
 				String platform = updatePlatformField.getText();
-				String developer = updateDeveloperField.getText();
-				int pegiRating = Integer.parseInt(updatePegiRatingField.getText());
-				pegiRatingString=Integer.toString(pegiRating);
+				int year = Integer.parseInt(updateYearField.getText());
+				yearString=Integer.toString(year);
 				int price = Integer.parseInt(updatePriceField.getText());
 				priceString= Integer.toString(price);
 				JOptionPane.showMessageDialog(new JFrame(), "Game updated.");
@@ -243,7 +336,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 				JOptionPane.showMessageDialog(new JFrame(), "This product does not exist.");
 			}
 			catch(NumberFormatException numEx){
-				JOptionPane.showMessageDialog(new JFrame(), "Incorrect input for PegiRating/Price, try again");
+				JOptionPane.showMessageDialog(new JFrame(), "Incorrect input for Year/Price, try again");
 			}
 			catch(Exception ex){
 				ex.printStackTrace();
@@ -252,7 +345,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		if(e.getSource().equals(deleteButton)){
 			try{
 			System.out.println("Delete Button Works");
-			String title = deleteTitleField.getText();
+			String title = deleteIdField.getText();
 			JOptionPane.showMessageDialog(new JFrame(), "Game deleted.");
 			}catch(NullPointerException nullP){
 				JOptionPane.showMessageDialog(new JFrame(), "This product does not exist.");
@@ -262,29 +355,47 @@ public class MainGameWindow extends JFrame implements ActionListener{
 				JOptionPane.showMessageDialog(new JFrame(), "Delete Unsuccessful.");
 			}
 		}
+		if(e.getSource().equals(tablesButton)){
+			try{
+				JOptionPane.showMessageDialog(new JFrame(), "Tables created.");
+			}
+			catch(Exception ex){
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(new JFrame(), "Table Creation Unsuccessful.");
+			}
+		}
 		if(e.getSource().equals(addCancelButton)){
 				newTitleField.setText(""); 
 				newPlatformField.setText("");
-				newDeveloperField.setText("");
-				newPegiRatingField.setText(""); 
+				newYearField.setText(""); 
 				newPriceField.setText(""); 
 		}
 		if(e.getSource().equals(updateCancelButton)){
 			updateTitleField.setText(""); 
 			updatePlatformField.setText("");
-			updateDeveloperField.setText("");
-			updatePegiRatingField.setText(""); 
+			updateYearField.setText(""); 
 			updatePriceField.setText(""); 
 	}
 		if(e.getSource().equals(readCancelButton)){
-			readTitleField.setText(""); 
+			readIdField.setText(""); 
 	}
 		else if(e.getSource().equals(deleteCancelButton)){
-			deleteTitleField.setText(""); 
+			deleteIdField.setText(""); 
 			
 	}
 	}
 	
-	
+	static String getASCIIContentFromEntity(HttpEntity entity) throws IllegalStateException, IOException{
+		InputStream in = entity.getContent();
+		StringBuffer out = new StringBuffer();
+		int n = 1;
+		while( n> 0 ){
+			byte[] b = new byte[4096];
+			n = in.read(b);
+			if( n > 0 )
+				out.append(new String (b , 0 , n));
+		}
+		return out.toString();
+	}
 
 }
