@@ -45,8 +45,8 @@ public class GameResource {
 		game.setYear(year);
 		game.setPrice(price);
 		
-//		int nextGame = dao.getNextGameID(game.getId());
-//		game.setId(nextGame);
+		//int nextGame = dao.getNextGameID(game.getId());
+		//game.setId(nextGame);
 		dao.addGame(game);
 	}
 	
@@ -62,8 +62,8 @@ public class GameResource {
 		dao.deleteGame(id);
 	}
 	@PUT
-	@Produces({ MediaType.TEXT_HTML  }) 
-	@Consumes({ MediaType.APPLICATION_FORM_URLENCODED, MediaType.TEXT_HTML }) 
+	@Produces({ MediaType.TEXT_HTML, MediaType.APPLICATION_XML }) 
+	@Consumes({ MediaType.APPLICATION_FORM_URLENCODED, MediaType.TEXT_HTML, MediaType.APPLICATION_XML }) 
 	@Path("{id}")
 	public void updateGame(@PathParam("id") String id,
 			@FormParam("title") String title,

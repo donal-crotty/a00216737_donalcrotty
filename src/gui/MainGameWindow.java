@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import org.apache.http.HttpEntity;
@@ -29,6 +30,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -54,6 +56,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 	private JLabel yearLabel = new JLabel("Year:");
 	private JLabel priceLabel = new JLabel("Price:");
 	
+	private JLabel updateIdLabel = new JLabel("Id:");
 	private JLabel updateTitleLabel = new JLabel("Title:");
 	private JLabel updatePlatformLabel = new JLabel("Platform:");
 	private JLabel updateYearLabel = new JLabel("Year:");
@@ -63,19 +66,20 @@ public class MainGameWindow extends JFrame implements ActionListener{
 	
 	private JLabel deleteIdLabel = new JLabel("Id:");
 	
-	private JTextField newIdField = new JTextField("1");
-	private JTextField newTitleField = new JTextField("BF1");
-	private JTextField newPlatformField = new JTextField("Xbox ");
-	private JTextField newYearField = new JTextField("16");
-	private JTextField newPriceField = new JTextField("75");
+	private JTextField newIdField = new JTextField();
+	private JTextField newTitleField = new JTextField();
+	private JTextField newPlatformField = new JTextField();
+	private JTextField newYearField = new JTextField();
+	private JTextField newPriceField = new JTextField();
 	
-	private JTextField updateIdField = new JTextField("1");
+	private JTextField updateIdField = new JTextField();
 	private JTextField updateTitleField = new JTextField();
 	private JTextField updatePlatformField = new JTextField();
 	private JTextField updateYearField = new JTextField();
 	private JTextField updatePriceField = new JTextField();
 	
 	private JTextField readIdField = new JTextField();
+	private JTextArea readTextbox = new JTextArea(10,10);
 	
 	private JTextField deleteIdField = new JTextField();
 	
@@ -126,6 +130,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		platformLabel.setForeground(Color.white);
 		yearLabel.setForeground(Color.white);
 		priceLabel.setForeground(Color.white);
+		updateIdLabel.setForeground(Color.white);
 		updateTitleLabel.setForeground(Color.white);
 		updatePlatformLabel.setForeground(Color.white);
 		updateYearLabel.setForeground(Color.white);
@@ -165,6 +170,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		readTab.add(readSouth,BorderLayout.SOUTH);
 		readCentre.add(readIdLabel);
 		readCentre.add(readIdField);
+		readCentre.add(readTextbox);
 		readSouth.add(readButton);
 		readSouth.add(readAllButton);
 		readButton.addActionListener(this);
@@ -180,6 +186,8 @@ public class MainGameWindow extends JFrame implements ActionListener{
 	
 		updateTab.add(updateCentre, BorderLayout.CENTER);
 		updateTab.add(updateSouth, BorderLayout.SOUTH);
+		updateCentre.add(updateIdLabel);
+		updateCentre.add(updateIdField);
 		updateCentre.add(updateTitleLabel);
 		updateCentre.add(updateTitleField);
 		updateCentre.add(updatePlatformLabel);
@@ -215,6 +223,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		tablesSouth.add(tablesButton);
 		tablesButton.addActionListener(this);
 		pack();
+		frame.setLocationRelativeTo(null);
 		frame.setSize(640,480);
 		frame.setVisible(true);	
 	}
@@ -271,34 +280,85 @@ public class MainGameWindow extends JFrame implements ActionListener{
 				}
 		}
 		if(e.getSource().equals(readButton)){
-			//GET ById
-				System.out.println("Read Button Works");
-				int id= Integer.parseInt(readIdField.getText());
-				URI uri = null;
-				try {
-					uri = new URIBuilder()
-							.setScheme("http")
-							.setHost("localhost")
-							.setPort(8080)
-							.setPath("/A00216737_DonalCrotty/games/games/"+id).build();
-				} catch (URISyntaxException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				}
-				System.out.println(uri.toString());
-				
-				HttpGet httpGet = new HttpGet(uri);
-				httpGet.setHeader("Accept" , "text/html");
-				CloseableHttpClient client = HttpClients.createDefault();
+			CloseableHttpResponse response = null;
+			CloseableHttpClient httpClient = null;
+			String id = readIdField.getText();
+			try{
+				URI uri = new URIBuilder()
+						.setScheme("http")
+						.setHost("localhost")
+						.setPort(8080)
+						.setPath("/A00216737_DonalCrotty/games/games"+id)
+						.build();
 			
-				JOptionPane.showMessageDialog(new JFrame(), "This product does not exist.");
+				System.out.println(uri.toString());
+				HttpGet httpGet = new HttpGet(uri);
+				//httpGet.setHeader("Accept" , "application/json");
+				httpGet.setHeader("Accept" , "application/xml");
+				//httpGet.setHeader("Accept" , "text/html");
+				httpGet.setHeader("Content-Type" , "application/xml");
+				
+				httpClient = HttpClients.createDefault();
+				response = httpClient.execute(httpGet);
+				
+				String text;
+				try{
+					HttpEntity entity = response.getEntity();
+					text = getASCIIContentFromEntity(entity);
+					
+				}finally{
+					response.close();
+				}
+				
+				System.out.println("REPLY: " + text);
+				readTextbox.setText(text);
+			}catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}else {
+			//GET ALL
+			CloseableHttpResponse response = null;
+			CloseableHttpClient httpClient = null;
+		
+			try{
+				URI uri = new URIBuilder().setScheme("http").setHost("localhost")
+						.setPort(8080).setPath("/A00216737_DonalCrotty/games/games").build();
+			
+				System.out.println(uri.toString());
+				HttpGet httpGet = new HttpGet(uri);
+				//httpGet.setHeader("Accept" , "application/json");
+				httpGet.setHeader("Accept" , "application/xml");
+				//httpGet.setHeader("Accept" , "text/html");
+				httpGet.setHeader("Content-Type" , "application/xml");
+				
+				httpClient = HttpClients.createDefault();
+				response = httpClient.execute(httpGet);
+				
+				String text;
+				try{
+					HttpEntity entity = response.getEntity();
+					text = getASCIIContentFromEntity(entity);
+					
+				}finally{
+					response.close();
+				}
+				
+				System.out.println("REPLY: " + text);
+				readTextbox.setText(text);
+			}catch(Exception ex){
+				ex.printStackTrace();
+			}
 			
 		}
-		if(e.getSource().equals(readAllButton)){
-			//GET ALL
-				System.out.println("Read All Button Works");
-				JOptionPane.showMessageDialog(new JFrame(), "ID field is not required, this will be cleared.");
-				readIdField.setText("");
+
+		if(e.getSource().equals(updateButton)){
+				System.out.println("Update Button Works");
+				int id = Integer.parseInt(updateIdField.getText());
+				String title = updateTitleField.getText();
+				String platform = updatePlatformField.getText();
+				String year= updateYearField.getText();
+				String price = updatePriceField.getText();
+				
 				URI uri = null;
 				try {
 					uri = new URIBuilder()
@@ -312,35 +372,35 @@ public class MainGameWindow extends JFrame implements ActionListener{
 				}
 				System.out.println(uri.toString());
 				
-				HttpGet httpGet = new HttpGet(uri);
-				httpGet.setHeader("Accept" , "text/html");
+				HttpPut httpPut = new HttpPut(uri);
+				//httpPut.setHeader("Accept" , "text/html");
+				httpPut.setHeader("Content-Type", "application/x-www-form-urlencoded");
 				CloseableHttpClient client = HttpClients.createDefault();
-			
-				//JOptionPane.showMessageDialog(new JFrame(), "This product does not exist.");
-			
-		}
-		if(e.getSource().equals(updateButton)){
-			try{
-				System.out.println("Update Button Works");
-				String title = updateTitleField.getText();
-				String priceString="";
-				String yearString="";
-				String platform = updatePlatformField.getText();
-				int year = Integer.parseInt(updateYearField.getText());
-				yearString=Integer.toString(year);
-				int price = Integer.parseInt(updatePriceField.getText());
-				priceString= Integer.toString(price);
+				
+				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+				nameValuePairs.add(new BasicNameValuePair("id" , ""+id));
+				nameValuePairs.add(new BasicNameValuePair("title" , title));
+				nameValuePairs.add(new BasicNameValuePair("platform" , platform));
+				nameValuePairs.add(new BasicNameValuePair("year" , "" + year));
+				nameValuePairs.add(new BasicNameValuePair("price" , "" + price));
+				
+				try {
+					httpPut.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+				} catch (UnsupportedEncodingException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				System.out.println("Sending Request ...");
+				CloseableHttpResponse response;
+				try {
+					response = client.execute(httpPut);
+					System.out.println("Response " + response.toString());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
 				JOptionPane.showMessageDialog(new JFrame(), "Game updated.");
-			}
-			catch(NullPointerException nullP){
-				JOptionPane.showMessageDialog(new JFrame(), "This product does not exist.");
-			}
-			catch(NumberFormatException numEx){
-				JOptionPane.showMessageDialog(new JFrame(), "Incorrect input for Year/Price, try again");
-			}
-			catch(Exception ex){
-				ex.printStackTrace();
-			}
 		}
 		if(e.getSource().equals(deleteButton)){
 			try{
