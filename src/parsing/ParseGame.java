@@ -28,14 +28,25 @@ public class ParseGame {
 			XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
 			XmlPullParser pullParser = factory.newPullParser();
 			pullParser.setInput(new StringReader(s));
-			processDocument(pullParser);
+			processDocument(pullParser, 0);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 		return currentGameList;
 	}
+	public Game doParseGame(String s) {
+		try{
+			XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+			XmlPullParser pullParser = factory.newPullParser();
+			pullParser.setInput(new StringReader(s));
+			processDocument(pullParser , 1);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return currentGame;
+	}
 	
-	public void processDocument(XmlPullParser pullParser)
+	public void processDocument(XmlPullParser pullParser,  int key)
 			throws XmlPullParserException, IOException {
 		int eventType = pullParser.getEventType();
 		do {
@@ -44,20 +55,20 @@ public class ParseGame {
 			} else if (eventType == XmlPullParser.END_DOCUMENT) {
 				System.out.println("End document");
 			} else if (eventType == XmlPullParser.START_TAG) {
-				processStartElement(pullParser);
+				processStartElement(pullParser, key);
 			} else if (eventType == XmlPullParser.END_TAG) {
-				processEndElement(pullParser);
+				processEndElement(pullParser , key);
 			} else if (eventType == XmlPullParser.TEXT) {
-				processText(pullParser);
+				processText(pullParser, key);
 			}
 			eventType = pullParser.next();
 		} while (eventType != XmlPullParser.END_DOCUMENT);
 		
 	}
 	
-	public void processStartElement(XmlPullParser pullParser){
+	public void processStartElement(XmlPullParser pullParser, int key){
 		String name = pullParser.getName();
-		if(name.equals("games")){
+		if(name.equals("games") && key != 1){
 			inGames = true;
 			currentGameList = new ArrayList<Game>();
 		}else if(name.equals("game")){
@@ -76,12 +87,12 @@ public class ParseGame {
 		}
 	}
 	
-	public void processEndElement(XmlPullParser pullParser){
+	public void processEndElement(XmlPullParser pullParser, int key){
 		String name = pullParser.getName();
 		if(name.equals("games")){
 			inGames = false;
 			currentGameList = new ArrayList<Game>();
-		}else if(name.equals("game")){
+		}else if(name.equals("game") && key != 1){
 			inGame = false;
 			currentGame = new Game();
 		}else if(name.equals("id")){
@@ -97,7 +108,7 @@ public class ParseGame {
 		}
 	}
 	
-	public void processText(XmlPullParser event) throws XmlPullParserException{
+	public void processText(XmlPullParser event, int key) throws XmlPullParserException{
 		if(inId){
 			String s= event.getText();
 			currentGame.setId(Integer.parseInt(s));

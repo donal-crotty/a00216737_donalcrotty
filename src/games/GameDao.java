@@ -37,6 +37,27 @@ public class GameDao {
             ex.printStackTrace();
         }
     }
+     
+    public void createDatabase() {
+    	try {
+    		Statement stmt = con.createStatement();
+    		stmt.executeUpdate("DROP TABLE IF EXISTS MOVIE;");
+    		stmt.executeUpdate( "CREATE Table MOVIE(" + 
+					"			id INTEGER," + 
+					"			title VARCHAR(30) NOT NULL," +  
+					"			year VARCHAR(4) NOT NULL," +
+					"			price VARCHAR(4) NOT NULL,);"
+					);
+    		stmt.executeUpdate( "INSERT INTO MOVIE ( id, title, year, price) VALUES (1 , '2 Fast 2 Furious', '2003', '10'));");
+    		stmt.executeUpdate( "INSERT INTO MOVIE ( id, title, year, price) VALUES (2 , 'Fast and the Furious: Toyko Drift', '2006', '12'));");
+    		stmt.executeUpdate( "INSERT INTO MOVIE ( id, title, year, price) VALUES (3 , 'Fast & Furious', '2009', '14'));");
+    		stmt.executeUpdate( "INSERT INTO MOVIE ( id, title, year, price) VALUES (4 , 'Fast Five', '2011', '16'));");
+			stmt.close();
+    		
+    	} catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
     public int getNextGameID(int id) {
         int newGameID = -1;
 
@@ -123,6 +144,7 @@ public class GameDao {
 
 
                 ps.executeUpdate();
+                
 
         } catch (SQLException ex) {
             System.err.println("SQLException");

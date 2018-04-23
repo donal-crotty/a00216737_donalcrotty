@@ -56,6 +56,10 @@ public class GameResource {
 		return dao.getAllGames();
 	}
 	@DELETE
+	public void deleteAllGames() {
+		dao.deleteAllGames();
+	}
+	@DELETE
 	@Path("{id}")
 	public void deleteGame(@PathParam("id") String id) {
 		System.out.println("Delete id: " + id);

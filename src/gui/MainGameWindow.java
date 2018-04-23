@@ -20,14 +20,17 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -36,14 +39,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 
+import games.Game;
+import games.GameDao;
+import parsing.ParseGame;
+
 
 public class MainGameWindow extends JFrame implements ActionListener{
 	private JButton addButton = new JButton("Add");
 	private JButton readButton = new JButton("Read");
-	private JButton readAllButton = new JButton("Read All");
 	private JButton updateButton = new JButton("Update");
 	private JButton deleteButton = new JButton("Delete");
-	private JButton tablesButton = new JButton("Create Tables");
+	private JButton tablesButton = new JButton("Create Movie Table");
 	
 	private JButton addCancelButton = new JButton("Cancel");
 	private JButton readCancelButton = new JButton("Cancel");
@@ -63,6 +69,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 	private JLabel updatePriceLabel = new JLabel("Price:");
 	
 	private JLabel readIdLabel = new JLabel("Id:");
+	private JLabel readOutputLabel = new JLabel("GET Results:");
 	
 	private JLabel deleteIdLabel = new JLabel("Id:");
 	
@@ -79,8 +86,10 @@ public class MainGameWindow extends JFrame implements ActionListener{
 	private JTextField updatePriceField = new JTextField();
 	
 	private JTextField readIdField = new JTextField();
-	private JTextArea readTextbox = new JTextArea(10,10);
+	private JTextArea readTextbox = new JTextArea(16, 58);
 	
+	JScrollPane scroll = new JScrollPane(readTextbox);
+		
 	private JTextField deleteIdField = new JTextField();
 	
 	Color myColor = Color.decode("#577099");
@@ -99,7 +108,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		createSouth.setBackground(myColor1);
 		
 		JPanel readTab = new JPanel(new BorderLayout());
-		JPanel readCentre = new JPanel(new GridLayout(10,2));
+		JPanel readCentre = new JPanel(new GridLayout(10,5));
 		JPanel readSouth = new JPanel();
 		readCentre.setBackground(myColor1);
 		readSouth.setBackground(myColor1);
@@ -170,18 +179,17 @@ public class MainGameWindow extends JFrame implements ActionListener{
 		readTab.add(readSouth,BorderLayout.SOUTH);
 		readCentre.add(readIdLabel);
 		readCentre.add(readIdField);
-		readCentre.add(readTextbox);
+		readCentre.add(readOutputLabel);
+		//readTextbox.setEditable(false);
+		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		readCentre.add(scroll);
 		readSouth.add(readButton);
-		readSouth.add(readAllButton);
 		readButton.addActionListener(this);
-		readAllButton.addActionListener(this);
 		readSouth.add(readCancelButton);
 		readCancelButton.addActionListener(this);
 		readButton.setBackground(myColor);
-		readAllButton.setBackground(myColor);
 		readCancelButton.setBackground(myColor);
 		readButton.setForeground(Color.white);
-		readAllButton.setForeground(Color.white);
 		readCancelButton.setForeground(Color.white);
 	
 		updateTab.add(updateCentre, BorderLayout.CENTER);
@@ -273,22 +281,28 @@ public class MainGameWindow extends JFrame implements ActionListener{
 				try {
 					response = client.execute(httpPost);
 					System.out.println("Response " + response.toString());
-					JOptionPane.showMessageDialog(new JFrame(), "Game created.");
+					//JOptionPane.showMessageDialog(new JFrame(), "Game created.");
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+				newIdField.setText("");
+				newTitleField.setText(""); 
+				newPlatformField.setText("");
+				newYearField.setText(""); 
+				newPriceField.setText(""); 
 		}
 		if(e.getSource().equals(readButton)){
 			CloseableHttpResponse response = null;
 			CloseableHttpClient httpClient = null;
 			String id = readIdField.getText();
+			
 			try{
 				URI uri = new URIBuilder()
 						.setScheme("http")
 						.setHost("localhost")
 						.setPort(8080)
-						.setPath("/A00216737_DonalCrotty/games/games"+id)
+						.setPath("/A00216737_DonalCrotty/games/games/"+id)
 						.build();
 			
 				System.out.println(uri.toString());
@@ -301,17 +315,20 @@ public class MainGameWindow extends JFrame implements ActionListener{
 				httpClient = HttpClients.createDefault();
 				response = httpClient.execute(httpGet);
 				
-				String text;
+				String text ="";
 				try{
 					HttpEntity entity = response.getEntity();
 					text = getASCIIContentFromEntity(entity);
 					
+					String output="";
+					Game game = new ParseGame().doParseGame(text);
+						//System.out.println("Id: "+game.getId()+ "\nTitle: "+game.getTitle()+ "\nPlatform: "+game.getPlatform()+"\nYear: "+game.getYear()+ "\nPrice: "+game.getPrice());
+						 output += "Id: "+game.getId()+ "\nTitle: "+game.getTitle()+ "\nPlatform: "+game.getPlatform()+"\nYear: "+game.getYear()+ "\nPrice: "+game.getPrice()+"\n";
+						System.out.println("REPLY: " + output);
+						readTextbox.setText(output);
 				}finally{
 					response.close();
 				}
-				
-				System.out.println("REPLY: " + text);
-				readTextbox.setText(text);
 			}catch(Exception ex){
 				ex.printStackTrace();
 			}
@@ -327,24 +344,33 @@ public class MainGameWindow extends JFrame implements ActionListener{
 				System.out.println(uri.toString());
 				HttpGet httpGet = new HttpGet(uri);
 				//httpGet.setHeader("Accept" , "application/json");
+				//httpGet.setHeader("Accept" , "application/xml");
 				httpGet.setHeader("Accept" , "application/xml");
-				//httpGet.setHeader("Accept" , "text/html");
 				httpGet.setHeader("Content-Type" , "application/xml");
 				
 				httpClient = HttpClients.createDefault();
 				response = httpClient.execute(httpGet);
 				
-				String text;
+				String text = "";
 				try{
 					HttpEntity entity = response.getEntity();
 					text = getASCIIContentFromEntity(entity);
 					
+					String output="";
+					List<Game> gamesOutput = new ParseGame().doParseGames(text);
+					for(Game game: gamesOutput ){
+						//System.out.println("Id: "+game.getId()+ "\nTitle: "+game.getTitle()+ "\nPlatform: "+game.getPlatform()+"\nYear: "+game.getYear()+ "\nPrice: "+game.getPrice());
+						 output += "Id: "+game.getId()+ "\nTitle: "+game.getTitle()+ "\nPlatform: "+game.getPlatform()+"\nYear: "+game.getYear()+ "\nPrice: "+game.getPrice()+"\n";
+						//System.out.println("REPLY: " + output);
+						
+					}
+					System.out.println("REPLY: " + output);
+					readTextbox.setText(output);
 				}finally{
 					response.close();
 				}
 				
-				System.out.println("REPLY: " + text);
-				readTextbox.setText(text);
+				
 			}catch(Exception ex){
 				ex.printStackTrace();
 			}
@@ -365,7 +391,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 							.setScheme("http")
 							.setHost("localhost")
 							.setPort(8080)
-							.setPath("/A00216737_DonalCrotty/games/games/").build();
+							.setPath("/A00216737_DonalCrotty/games/games/"+id).build();
 				} catch (URISyntaxException e2) {
 					// TODO Auto-generated catch block
 					e2.printStackTrace();
@@ -378,7 +404,7 @@ public class MainGameWindow extends JFrame implements ActionListener{
 				CloseableHttpClient client = HttpClients.createDefault();
 				
 				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
-				nameValuePairs.add(new BasicNameValuePair("id" , ""+id));
+				//nameValuePairs.add(new BasicNameValuePair("id" , ""+id));
 				nameValuePairs.add(new BasicNameValuePair("title" , title));
 				nameValuePairs.add(new BasicNameValuePair("platform" , platform));
 				nameValuePairs.add(new BasicNameValuePair("year" , "" + year));
@@ -400,23 +426,75 @@ public class MainGameWindow extends JFrame implements ActionListener{
 					e1.printStackTrace();
 				}
 				
-				JOptionPane.showMessageDialog(new JFrame(), "Game updated.");
+				newIdField.setText("");
+				newTitleField.setText(""); 
+				newPlatformField.setText("");
+				newYearField.setText(""); 
+				newPriceField.setText(""); 
 		}
 		if(e.getSource().equals(deleteButton)){
-			try{
-			System.out.println("Delete Button Works");
-			String title = deleteIdField.getText();
-			JOptionPane.showMessageDialog(new JFrame(), "Game deleted.");
-			}catch(NullPointerException nullP){
-				JOptionPane.showMessageDialog(new JFrame(), "This product does not exist.");
-			}
-			catch(Exception ex){
-				ex.printStackTrace();
-				JOptionPane.showMessageDialog(new JFrame(), "Delete Unsuccessful.");
+			String id = deleteIdField.getText();
+			if(deleteIdField.getText() != "" || deleteIdField.getText() != null) {
+				URI uri = null;
+				try {
+					uri = new URIBuilder()
+							.setScheme("http")
+							.setHost("localhost")
+							.setPort(8080)
+							.setPath("/A00216737_DonalCrotty/games/games/" + id).build();
+				} catch (URISyntaxException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+				System.out.println(uri.toString());
+				
+				HttpDelete httpDelete = new HttpDelete(uri);
+				//httpDelete.setHeader("Accept" , "text/html");
+				CloseableHttpClient client = HttpClients.createDefault();
+				System.out.println("Sending Delete Request ...");
+				CloseableHttpResponse response;
+				try {
+					response = client.execute(httpDelete);
+					System.out.println("Response " + response.toString());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+			}else {
+				//DELETE ALL 
+				URI uri = null;
+				try {
+					uri = new URIBuilder()
+							.setScheme("http")
+							.setHost("localhost")
+							.setPort(8080)
+							.setPath("/A00216737_DonalCrotty/games/games").build();
+				} catch (URISyntaxException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+				System.out.println(uri.toString());
+				
+				HttpDelete httpDelete = new HttpDelete(uri);
+				httpDelete.setHeader("Accept" , "text/html");
+				CloseableHttpClient client = HttpClients.createDefault();
+				System.out.println("Sending Delete Request ...");
+				CloseableHttpResponse response;
+				try {
+					response = client.execute(httpDelete);
+					System.out.println("Response " + response.toString());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
 			}
 		}
 		if(e.getSource().equals(tablesButton)){
 			try{
+				GameDao dao = new GameDao();
+				dao.createDatabase();
 				JOptionPane.showMessageDialog(new JFrame(), "Tables created.");
 			}
 			catch(Exception ex){
