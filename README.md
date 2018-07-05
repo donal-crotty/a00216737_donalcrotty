@@ -1,4 +1,4 @@
-# A00216737_DonalCrotty
+# Distributed Systems REST Assignment using JAXB, JAX-RS and HQSLDB
 
 Distributed Systems Assignment
 
